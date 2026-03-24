@@ -9,6 +9,9 @@ from authlib.integrations.starlette_client import OAuth
 from app.routers import auth, product, cart, order
 import os
 
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -19,7 +22,7 @@ app.include_router(auth.router)
 app.include_router(product.router)
 app.include_router(cart.router)
 app.include_router(order.router)
-app.add_middleware(SessionMiddleware, secret_key="supersecretkey")
+app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 origins = [
     "http://localhost:3000",
 ]
