@@ -22,14 +22,26 @@ class SortField(str, Enum):
     quantity = "quantity"
 
 
-# @router.post("/", dependencies=[Depends(get_current_user)])
-# def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
-#     return product_service.create_product(db, product)
-# def create_product(product: schemas.ProductCreate,db: Session = Depends(get_db),current_user = Depends(get_current_user)):
-@router.post("/", response_model=schemas.ProductResponse)
-def create_product(product: schemas.ProductCreate,db: Session = Depends(get_db),admin = Depends(get_current_admin)):
-    logger.info(f"Product created by admin: {admin.email}")
-    return product_service.create_product(db, product)
+
+@router.get("/", response_model=list[schemas.ProductResponse])
+def get_products(skip: int = 0,limit: int = 10, db: Session = Depends(get_db)):
+    products = product_service.get_all_products(db, skip, limit)
+    return products
+
+
+
+
+
+
+@router.get("/{product_id}", response_model=schemas.ProductResponse)
+def get_product(product_id: int, db: Session = Depends(get_db)):
+
+    product = product_service.get_product_by_id(db, product_id)
+
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    return product
 
 
 
@@ -58,25 +70,15 @@ def search_products(
     return products
 
 
-@router.get("/", response_model=list[schemas.ProductResponse])
-def get_products(skip: int = 0,limit: int = 10, db: Session = Depends(get_db)):
-    products = product_service.get_all_products(db, skip, limit)
-    return products
+# @router.post("/", dependencies=[Depends(get_current_user)])
+# def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+#     return product_service.create_product(db, product)
+# def create_product(product: schemas.ProductCreate,db: Session = Depends(get_db),current_user = Depends(get_current_user)):
+@router.post("/", response_model=schemas.ProductResponse)
+def create_product(product: schemas.ProductCreate,db: Session = Depends(get_db),admin = Depends(get_current_admin)):
+    logger.info(f"Product created by admin: {admin.email}")
+    return product_service.create_product(db, product)
 
-
-
-
-
-
-@router.get("/{product_id}", response_model=schemas.ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
-
-    product = product_service.get_product_by_id(db, product_id)
-
-    if product is None:
-        raise HTTPException(status_code=404, detail="Product not found")
-
-    return product
 
 
 
@@ -90,6 +92,7 @@ def patch_product(product_id: int, updated_data: schemas.ProductUpdate, db: Sess
         raise HTTPException(status_code=404, detail="Product not found")
     logger.info(f"Product updated: {product_id} by {admin.email}")
     return product
+
 
 @router.put("/{product_id}", response_model = schemas.ProductResponse)
 def update_product(product_id: int, updated_data: schemas.ProductCreate, db: Session = Depends(get_db), admin = Depends(get_current_admin)):
